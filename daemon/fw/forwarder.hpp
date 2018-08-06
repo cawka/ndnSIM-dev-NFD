@@ -165,6 +165,17 @@ public: // forwarding entrypoints and tables
     return m_networkRegionTable;
   }
 
+public:
+  /** \brief trigger before PIT entry is satisfied
+   *  \sa Strategy::beforeSatisfyInterest
+   */
+  signal::Signal<Forwarder, pit::Entry, Face, Data> beforeSatisfyInterest;
+
+  /** \brief trigger before PIT entry expires
+   *  \sa Strategy::beforeExpirePendingInterest
+   */
+  signal::Signal<Forwarder, pit::Entry> beforeExpirePendingInterest;
+
 PUBLIC_WITH_TESTS_ELSE_PRIVATE: // pipelines
   /** \brief incoming Interest pipeline
    */
@@ -272,6 +283,7 @@ private:
   StrategyChoice     m_strategyChoice;
   DeadNonceList      m_deadNonceList;
   NetworkRegionTable m_networkRegionTable;
+  shared_ptr<Face>   m_csFace;
 
   // allow Strategy (base class) to enter pipelines
   friend class fw::Strategy;
