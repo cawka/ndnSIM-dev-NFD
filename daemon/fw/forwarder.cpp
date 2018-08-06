@@ -34,6 +34,8 @@
 
 #include <ndn-cxx/lp/tags.hpp>
 
+#include "face/null-face.hpp"
+
 namespace nfd {
 
 NFD_LOG_INIT(Forwarder);
@@ -50,7 +52,10 @@ Forwarder::Forwarder()
   , m_pit(m_nameTree)
   , m_measurements(m_nameTree)
   , m_strategyChoice(*this)
+  , m_csFace(face::makeNullFace(FaceUri("contentstore://")))
 {
+  getFaceTable().addReserved(m_csFace, face::FACEID_CONTENT_STORE);
+
   m_faceTable.afterAdd.connect([this] (Face& face) {
     face.afterReceiveInterest.connect(
       [this, &face] (const Interest& interest) {
@@ -217,6 +222,10 @@ Forwarder::onContentStoreHit(const FaceEndpoint& ingress, const shared_ptr<pit::
   // set PIT expiry timer to now
   this->setExpiryTimer(pitEntry, 0_ms);
 
+  beforeSatisfyInterest(*pitEntry, *m_csFace, data);
+  this->dispatchToStrategy(*pitEntry,
+    [&] (fw::Strategy& strategy) { strategy.beforeSatisfyInterest(pitEntry, FaceEndpoint(*m_csFace, 0), data); });
+
   // dispatch to strategy: after Content Store hit
   this->dispatchToStrategy(*pitEntry,
     [&] (fw::Strategy& strategy) { strategy.afterContentStoreHit(pitEntry, ingress, data); });
@@ -241,6 +250,10 @@ Forwarder::onInterestFinalize(const shared_ptr<pit::Entry>& pitEntry)
 {
   NFD_LOG_DEBUG("onInterestFinalize interest=" << pitEntry->getName()
                 << (pitEntry->isSatisfied ? " satisfied" : " unsatisfied"));
+
+  if (!pitEntry->isSatisfied) {
+    beforeExpirePendingInterest(*pitEntry);
+  }
 
   // Dead Nonce List insert if necessary
   this->insertDeadNonceList(*pitEntry, nullptr);
@@ -295,6 +308,7 @@ Forwarder::onIncomingData(const FaceEndpoint& ingress, const Data& data)
     // set PIT expiry timer to now
     this->setExpiryTimer(pitEntry, 0_ms);
 
+    beforeSatisfyInterest(*pitEntry, ingress.face, data);
     // trigger strategy: after receive Data
     this->dispatchToStrategy(*pitEntry,
       [&] (fw::Strategy& strategy) { strategy.afterReceiveData(pitEntry, ingress, data); });
@@ -329,6 +343,7 @@ Forwarder::onIncomingData(const FaceEndpoint& ingress, const Data& data)
       this->setExpiryTimer(pitEntry, 0_ms);
 
       // invoke PIT satisfy callback
+      beforeSatisfyInterest(*pitEntry, ingress.face, data);
       this->dispatchToStrategy(*pitEntry,
         [&] (fw::Strategy& strategy) { strategy.beforeSatisfyInterest(pitEntry, ingress, data); });
 
