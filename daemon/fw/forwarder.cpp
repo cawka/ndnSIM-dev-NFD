@@ -176,6 +176,7 @@ Forwarder::onContentStoreMiss(const FaceEndpoint& ingress,
 {
   NFD_LOG_DEBUG("onContentStoreMiss interest=" << interest.getName());
   ++m_counters.nCsMisses;
+  afterCsMiss(interest);
 
   // insert in-record
   pitEntry->insertOrUpdateInRecord(ingress.face, interest);
@@ -216,6 +217,7 @@ Forwarder::onContentStoreHit(const FaceEndpoint& ingress, const shared_ptr<pit::
 {
   NFD_LOG_DEBUG("onContentStoreHit interest=" << interest.getName());
   ++m_counters.nCsHits;
+  afterCsHit(interest, data);
 
   data.setTag(make_shared<lp::IncomingFaceIdTag>(face::FACEID_CONTENT_STORE));
   // FIXME Should we lookup PIT for other Interests that also match the data?

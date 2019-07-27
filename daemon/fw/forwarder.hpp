@@ -176,6 +176,14 @@ public:
    */
   signal::Signal<Forwarder, pit::Entry> beforeExpirePendingInterest;
 
+  /** \brief Signals when the incoming interest pipeline gets a hit from the content store
+   */
+  signal::Signal<Forwarder, Interest, Data> afterCsHit;
+
+  /** \brief Signals when the incoming interest pipeline gets a miss from the content store
+   */
+  signal::Signal<Forwarder, Interest> afterCsMiss;
+
 PUBLIC_WITH_TESTS_ELSE_PRIVATE: // pipelines
   /** \brief incoming Interest pipeline
    */
