@@ -27,62 +27,53 @@
 
 namespace nfd {
 
-static thread_local unique_ptr<boost::asio::io_service> g_ioService;
 static thread_local unique_ptr<Scheduler> g_scheduler;
-static boost::asio::io_service* g_mainIoService = nullptr;
-static boost::asio::io_service* g_ribIoService = nullptr;
 
-boost::asio::io_service&
+namespace detail {
+
+void
+SimulatorIo::post(const std::function<void()>& callback)
+{
+  getScheduler().schedule(0_s, callback);
+}
+
+void
+SimulatorIo::dispatch(const std::function<void()>& callback)
+{
+  getScheduler().schedule(0_s, callback);
+}
+
+} // namespace detail
+
+detail::SimulatorIo&
 getGlobalIoService()
 {
-  if (g_ioService == nullptr) {
-    g_ioService = make_unique<boost::asio::io_service>();
-  }
-  return *g_ioService;
+  static detail::SimulatorIo io;
+  return io;
+}
+
+detail::SimulatorIo&
+getMainIoService()
+{
+  static detail::SimulatorIo io;
+  return io;
+}
+
+detail::SimulatorIo&
+getRibIoService()
+{
+  static detail::SimulatorIo io;
+  return io;
 }
 
 Scheduler&
 getScheduler()
 {
   if (g_scheduler == nullptr) {
-    g_scheduler = make_unique<Scheduler>(getGlobalIoService());
+    static ndn::DummyIoService io;
+    g_scheduler = make_unique<Scheduler>(io);
   }
   return *g_scheduler;
-}
-
-#ifdef WITH_TESTS
-void
-resetGlobalIoService()
-{
-  g_scheduler.reset();
-  g_ioService.reset();
-}
-#endif
-
-boost::asio::io_service&
-getMainIoService()
-{
-  BOOST_ASSERT(g_mainIoService != nullptr);
-  return *g_mainIoService;
-}
-
-boost::asio::io_service&
-getRibIoService()
-{
-  BOOST_ASSERT(g_ribIoService != nullptr);
-  return *g_ribIoService;
-}
-
-void
-setMainIoService(boost::asio::io_service* mainIo)
-{
-  g_mainIoService = mainIo;
-}
-
-void
-setRibIoService(boost::asio::io_service* ribIo)
-{
-  g_ribIoService = ribIo;
 }
 
 void
@@ -95,6 +86,12 @@ void
 runOnRibIoService(const std::function<void()>& f)
 {
   getRibIoService().post(f);
+}
+
+void
+resetGlobalScheduler()
+{
+  g_scheduler.reset();
 }
 
 } // namespace nfd
