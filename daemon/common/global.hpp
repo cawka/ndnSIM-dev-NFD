@@ -29,9 +29,26 @@
 
 namespace nfd {
 
+namespace detail {
+
+/**
+ * @brief Simulator-based IO that implements a few interfaces from boost::asio::io_service
+ */
+class SimulatorIo
+{
+public:
+  void
+  post(const std::function<void()>& callback);
+
+  void
+  dispatch(const std::function<void()>& callback);
+};
+
+} // namespace detail
+
 /** \brief Returns the global io_service instance for the calling thread.
  */
-boost::asio::io_service&
+detail::SimulatorIo&
 getGlobalIoService();
 
 /** \brief Returns the global Scheduler instance for the calling thread.
@@ -39,17 +56,11 @@ getGlobalIoService();
 Scheduler&
 getScheduler();
 
-boost::asio::io_service&
+detail::SimulatorIo&
 getMainIoService();
 
-boost::asio::io_service&
+detail::SimulatorIo&
 getRibIoService();
-
-void
-setMainIoService(boost::asio::io_service* mainIo);
-
-void
-setRibIoService(boost::asio::io_service* ribIo);
 
 /** \brief Run a function on the main io_service instance.
  */
@@ -61,14 +72,8 @@ runOnMainIoService(const std::function<void()>& f);
 void
 runOnRibIoService(const std::function<void()>& f);
 
-#ifdef WITH_TESTS
-/** \brief Destroy the global io_service instance.
- *
- *  It will be recreated at the next invocation of getGlobalIoService().
- */
 void
-resetGlobalIoService();
-#endif
+resetGlobalScheduler();
 
 } // namespace nfd
 
