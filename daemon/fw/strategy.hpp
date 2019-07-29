@@ -151,6 +151,19 @@ public: // triggers
   afterReceiveInterest(const FaceEndpoint& ingress, const Interest& interest,
                        const shared_ptr<pit::Entry>& pitEntry) = 0;
 
+
+  /** \brief trigger after a looped Interest is received
+   *
+   *  The Interest:
+   *  - does not violate Scope
+   *  - IS looped
+   *  - cannot be satisfied by ContentStore
+   *  - is under a namespace managed by this strategy
+   */
+  virtual void
+  afterReceiveLoopedInterest(const FaceEndpoint& ingress, const Interest& interest,
+                             pit::Entry& pitEntry);
+
   /** \brief trigger before PIT entry is satisfied
    *
    *  This trigger is invoked when an incoming Data satisfies more than one PIT entry.
