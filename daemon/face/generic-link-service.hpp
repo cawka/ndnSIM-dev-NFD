@@ -31,6 +31,8 @@
 #include "lp-reassembler.hpp"
 #include "lp-reliability.hpp"
 
+#include <ndn-cxx/lp/tags.hpp>
+
 namespace nfd {
 namespace face {
 
@@ -98,7 +100,6 @@ public:
   class Options
   {
   public:
-    constexpr
     Options() noexcept
     {
     }
@@ -151,6 +152,12 @@ public:
     /** \brief enables self-learning forwarding support
      */
     bool allowSelfLearning = true;
+
+    /** \brief Enable encoding and decoding of GeoTags
+     *
+     *  To enable, set value of enableGeoTags option to a function that generates `shared_ptr<GeoTag>`
+     */
+    std::function<std::shared_ptr<ndn::lp::GeoTag>()> enableGeoTags;
   };
 
   /** \brief counters provided by GenericLinkService

@@ -162,6 +162,13 @@ GenericLinkService::encodeLpFields(const ndn::PacketBase& netPkt, lp::Packet& lp
   else {
     lpPacket.add<lp::HopCountTagField>(0);
   }
+
+  if (m_options.enableGeoTags) {
+    auto geoTag = m_options.enableGeoTags();
+    if (geoTag != nullptr) {
+      lpPacket.add<lp::GeoTagField>(*geoTag);
+    }
+  }
 }
 
 void
@@ -357,6 +364,10 @@ GenericLinkService::decodeInterest(const Block& netPkt, const lp::Packet& firstP
     interest->setTag(make_shared<lp::HopCountTag>(firstPkt.get<lp::HopCountTagField>() + 1));
   }
 
+  if (m_options.enableGeoTags && firstPkt.has<lp::GeoTagField>()) {
+    interest->setTag(make_shared<lp::GeoTag>(firstPkt.get<lp::GeoTagField>()));
+  }
+
   if (firstPkt.has<lp::NextHopFaceIdField>()) {
     if (m_options.allowLocalFields) {
       interest->setTag(make_shared<lp::NextHopFaceIdTag>(firstPkt.get<lp::NextHopFaceIdField>()));
@@ -414,6 +425,10 @@ GenericLinkService::decodeData(const Block& netPkt, const lp::Packet& firstPkt,
 
   if (firstPkt.has<lp::HopCountTagField>()) {
     data->setTag(make_shared<lp::HopCountTag>(firstPkt.get<lp::HopCountTagField>() + 1));
+  }
+
+  if (m_options.enableGeoTags && firstPkt.has<lp::GeoTagField>()) {
+    data->setTag(make_shared<lp::GeoTag>(firstPkt.get<lp::GeoTagField>()));
   }
 
   if (firstPkt.has<lp::NackField>()) {
