@@ -90,7 +90,7 @@ private:
 private:
   ndn::KeyChain& m_keyChain;
   ndn::Face& m_face;
-  ndn::util::Scheduler m_scheduler;
+  ndn::Scheduler m_scheduler;
   ndn::nfd::Controller m_nfdController;
 
   Rib m_rib;

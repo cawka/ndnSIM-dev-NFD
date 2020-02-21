@@ -55,7 +55,7 @@ Forwarder::Forwarder(FaceTable& faceTable)
   , m_strategyChoice(*this)
   , m_csFace(face::makeNullFace(FaceUri("contentstore://")))
 {
-  getFaceTable().addReserved(m_csFace, face::FACEID_CONTENT_STORE);
+  m_faceTable.addReserved(m_csFace, face::FACEID_CONTENT_STORE);
 
   m_faceTable.afterAdd.connect([this] (const Face& face) {
     face.afterReceiveInterest.connect(
